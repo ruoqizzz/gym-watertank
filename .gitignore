@@ -1,0 +1,13 @@
+# macos
+.DS_Store
+
+# pyenv
+.python-version
+
+# python
+*/__pycache__
+__pycache__/
+# pip
+*.egg-info/
+build/
+dist/

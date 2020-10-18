@@ -37,7 +37,7 @@ class WaterTankLQREnv(gym.Env):
 		self.noise_cov = noise_cov
 
 		if self.n==1:
-			self.min_action = 0.
+			self.min_action = -15.
 			self.max_action = 15.
 			self.action_space = spaces.Box(
 									low=self.min_action,
@@ -45,7 +45,7 @@ class WaterTankLQREnv(gym.Env):
 									shape=(1,),
 									dtype=np.float32)
 		else:
-			self.min_action = 0.
+			self.min_action = -15.
 			self.max_action = 15.
 			self.low_action = np.ones(self.n)*self.min_action
 			self.high_action = np.ones(self.n)*self.max_action

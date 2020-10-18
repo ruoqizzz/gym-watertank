@@ -4,6 +4,6 @@ The gym_watertank envrionment contains three classical control problem, includin
 
 ## Installation
 ```bash
-cd gym-control
+cd gym-watertank
 pip install -e .
 ```

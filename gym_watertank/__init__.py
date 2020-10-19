@@ -1,16 +1,16 @@
 from gym.envs.registration import register
 
 register(
-    id='watertank-v0',
+    id='WaterTank-v0',
     entry_point='gym_watertank.envs:WaterTankEnv',
 )
 
 register(
-    id='watertanklqr-v0',
+    id='WaterTankLQR-v0',
     entry_point='gym_watertank.envs:WaterTankLQREnv',
 )
 
 register(
-    id='lqr-v0',
+    id='LQR-v0',
     entry_point='gym_watertank.envs:LQREnv',
 )

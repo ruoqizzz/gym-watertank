@@ -5,9 +5,10 @@
 .python-version
 
 # python
-*/__pycache__
+*/__pycache__/
 __pycache__/
 # pip
 *.egg-info/
 build/
 dist/
+gym_watertank.egg-info/

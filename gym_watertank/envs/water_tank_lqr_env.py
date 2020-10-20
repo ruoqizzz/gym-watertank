@@ -8,7 +8,7 @@ class WaterTankLQREnv(gym.Env):
 	def __init__(self, A=np.array([[0.98, 0], [0.02, 0.98]]),
 					   B=np.array([[0.1],[0]]),
 					   r = 9.,
-					   Z1 = np.array([[1,0],[0,1]]),
+					   Z1 = np.array([[0,0],[0,1]]),
 					   Z2 = 0.1,
 					   x_max = np.array([10,10]),
 					   gamma=0.99,
@@ -96,6 +96,10 @@ class WaterTankLQREnv(gym.Env):
 		action_tilde = np.clip(action_tilde, self.action_space.low, self.action_space.high)
 		noise = self.np_random.multivariate_normal(self.noise_mu, self.noise_cov)
 		action = action_tilde + self.get_lqr_action(self.state)
+		if self.n==1:
+			action = np.clip(action_tilde, 0, self.action_space.high)
+		else:
+			action = np.clip(action_tilde, np.zeros(self.n), self.action_space.high)
 		if self.n==1:
 			new_state = self.state@self.A.T + action*self.B.T.flatten() + noise
 		else:

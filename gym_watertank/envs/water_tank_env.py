@@ -9,7 +9,7 @@ class WaterTankEnv(gym.Env):
 	def __init__(self, A=np.array([[0.98, 0], [0.02, 0.98]]),
 					   B=np.array([[0.1],[0]]),
 					   r = 9.,
-					   Z1 = np.array([[1,0],[0,1]]),
+					   Z1 = np.array([[0,0],[0,1]]),
 					   Z2 = 0.1,
 					   x_max = np.array([10,10]),
 					   gamma=0.99,

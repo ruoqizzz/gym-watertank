@@ -13,7 +13,8 @@ class WaterTankLQREnv(gym.Env):
 					   x_max = np.array([10,10]),
 					   gamma=0.99,
 					   noise_cov = np.eye(2)*0.01,
-					   seed=None):
+					   seed=None,
+					   overflow_cost = -100):
 		'''
 		Z1 is the because the the second tank is the only goal
 			for the first tank, the cost is whether overflow
@@ -61,6 +62,7 @@ class WaterTankLQREnv(gym.Env):
 									dtype=np.float32)
 		self._max_episode_steps = 400
 		self._episode_steps = 0
+		self.overflow_cost = overflow_cost
 
 		self.seed(seed)
 		self.reset()
@@ -82,12 +84,12 @@ class WaterTankLQREnv(gym.Env):
 			cost += u@self.Z2@u.T
 		return -float(cost)
 
-	def overflow_cost(self, x):
+	def add_overflow_cost(self, x):
 		additional_cost = 0
 		if x[0].item() > self.observation_space.high[0]:
-			additional_cost -=20
+			additional_cost +=self.overflow_cost
 		if x[1].item() > self.observation_space.high[1]:
-			additional_cost -=20 
+			additional_cost +=self.overflow_cost 
 		return additional_cost
 
 	def step(self, action_tilde):
@@ -104,7 +106,7 @@ class WaterTankLQREnv(gym.Env):
 			new_state = self.state@self.A.T + action*self.B.T.flatten() + noise
 		else:
 			new_state = self.state@self.A.T + action@self.B.T + noise
-		reward += self.overflow_cost(new_state)
+		reward += self.add_overflow_cost(new_state)
 		self.state = np.clip(new_state,self.observation_space.low,self.observation_space.high)
 		if self._episode_steps < self._max_episode_steps:
 			done = False

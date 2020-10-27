@@ -11,6 +11,11 @@ register(
 )
 
 register(
+    id='WaterTankLQRZeroNoise-v0',
+    entry_point='gym_watertank.envs:WaterTankLQRZeroNoiseEnv',
+)
+
+register(
     id='LQR-v0',
     entry_point='gym_watertank.envs:LQREnv',
 )

@@ -110,7 +110,9 @@ class WaterTankLQRZeroNoiseEnv(gym.Env):
 
 	def reset(self):
 		self._episode_steps = 0
-		self.state = self.np_random.normal(0,1, size=self.m)
+		# random_state = self.np_random.normal(0,0.1, size=self.m)
+		# self.state = np.clip(random_state, self.observation_space.low, self.observation_space.high)
+		self.state = np.array([0.]*self.m)
 		return np.array(self.state)
 
 	def render(self, mode='human'):

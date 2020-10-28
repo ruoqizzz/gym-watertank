@@ -110,7 +110,8 @@ class WaterTankEnv(gym.Env):
 
 	def reset(self):
 		self._episode_steps = 0
-		self.state = self.np_random.normal(0,1, size=self.m)
+		random_state = self.np_random.normal(0,0.1, size=self.m)
+		self.state = np.clip(random_state, self.observation_space.low, self.observation_space.high)
 		return np.array(self.state)
 
 	def render(self, mode='human'):
@@ -148,4 +149,6 @@ class WaterTankEnv(gym.Env):
 		self.L = L
 		return K, L
 
+	def get_lqr_action(self, state):
+		return  - state@self.K.T + self.L*self.r
 

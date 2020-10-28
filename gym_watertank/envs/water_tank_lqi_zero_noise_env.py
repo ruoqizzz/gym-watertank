@@ -16,20 +16,36 @@ class WaterTankLQIZeroNoiseEnv(gym.Env):
 					   x_max = np.array([10,10]),
 					   gamma=0.99,
 					   seed=None,
-					   overflow_cost = -40):
+					   overflow_cost = -100):
 		super(WaterTankLQIZeroNoiseEnv, self).__init__()
-		self.m = A.shape[0]
+		self.m = A.shape[0] + 1
 		assert B.shape[0] == A.shape[1]
 		self.n = B.shape[1]
 		if not np.isscalar(Z2):
 			Z2.shape == A.shape
 		else:
 			self.n == 1
-		self.A = A
-		self.B = B
+
+		Atilde = np.zeros((self.m, self.m))
+		Atilde[0:self.m-1,0:self.m-1] = A
+		Atilde[-1][-1] = 1
+		Atilde[self.m-1, -2] = -1
+		# print("Atilde:\n",Atilde)
+		self.Atilde = Atilde
+
+		Btilde = np.zeros((self.m,1))
+		Btilde[0:self.m-1,:] = B
+		# print("Btilde:\n", Btilde)
+		self.Btilde = Btilde
+
 		self.r = r
-		self.Z1 = Z1
-		self.Z2 = Z2
+		Z1tilde  = np.zeros((self.m, self.m))
+		Z1tilde[0:self.m-1,0:self.m-1] = Z1
+		Z1tilde[-1,-1] = 1e-3
+		# print("Z1tilde:\n", Z1tilde)
+		self.Z1tilde = Z1tilde
+
+		self.Z2tilde = Z2
 		self.x_max = x_max
 
 		if self.n==1:
@@ -50,7 +66,7 @@ class WaterTankLQIZeroNoiseEnv(gym.Env):
 									high=self.high_action,
 									dtype=np.float32)
 		# note: observation sapce is [x,z] dim: (m+1)by 1
-		self.low_state = np.zeros(self.m+1)
+		self.low_state = np.zeros(self.m)
 		self.low_state[-1] = -np.inf
 		self.high_state = np.append(x_max, np.inf)
 		self.observation_space = spaces.Box(
@@ -70,11 +86,11 @@ class WaterTankLQIZeroNoiseEnv(gym.Env):
 
 
 	def calcu_reward(self,u):
-		cost = self.interval**2
+		cost = self.state@self.Z1tilde@self.state
 		if self.n==1:
-			cost+= u*self.Z2*u
+			cost+= u*self.Z2tilde*u
 		else:
-			cost += u@self.Z2@u.T
+			cost += u@self.Z2tilde@u.T
 		return -float(cost)
 
 
@@ -98,15 +114,12 @@ class WaterTankLQIZeroNoiseEnv(gym.Env):
 			action = np.clip(action, np.zeros(self.n), self.action_space.high)
 		# state transition
 		if self.n==1:
-			new_state = self.state@self.A.T + action*self.B.T.flatten()
+			new_state = self.state@self.Atilde.T + action*self.Btilde.T.flatten() + np.array([0,0,1])*self.r
 		else:
-			new_state = self.state@self.A.T + action@self.B.T
+			new_state = self.state@self.Atilde.T + action@self.Btilde.T+ np.array([0,0,1])*self.r
 		
-		self.state = np.clip(new_state, self.observation_space.low[:self.m], self.observation_space.high[:self.m])
-		self.interval  += self.r - self.state[1]
-
-		reward = self.calcu_reward(action_tilde) + self.add_overflow_cost(new_state)
-
+		self.state = np.clip(new_state, self.observation_space.low, self.observation_space.high)
+		reward = self.calcu_reward(action_tilde) + self.add_overflow_cost(new_state[:self.m-1])
 		if self._episode_steps < self._max_episode_steps:
 			done = False
 		else:
@@ -114,12 +127,13 @@ class WaterTankLQIZeroNoiseEnv(gym.Env):
 		return self._get_observe(), reward, done, {}
 
 	def _get_observe(self):
-		return np.append(self.state, self.interval)
+		return self.state
 
 	def reset(self):
 		self._episode_steps = 0
-		self.state = self.np_random.normal(0,1, size=self.m)
-		self.interval = 0.
+		# random_state = np.append(self.np_random.normal(0,0.1, size=self.m-1), 0.)
+		# self.state = np.clip(random_state, self.observation_space.low, self.observation_space.high)
+		self.state = np.array([0.]*self.m)
 		return self._get_observe()
 
 	def render(self, mode='human'):
@@ -129,22 +143,10 @@ class WaterTankLQIZeroNoiseEnv(gym.Env):
 		self.state = None
 
 	def linear_policy_K(self, gamma):
-		Atilde = np.zeros((self.m+1, self.m+1))
-		Atilde[0:self.m,0:self.m] = self.A
-		Atilde[-1][-1] = 1
-		Atilde[self.m, -2] = -1
-		# print("Atilde:\n",Atilde)
-
-		Btilde = np.zeros((self.m+1,1))
-		Btilde[0:2,:] = self.B
-		# print("Btilde:\n", Btilde)
-
-		Z1tilde  = np.zeros((self.m+1, self.m+1))
-		Z1tilde[0:self.m,0:self.m] = self.Z1
-		Z1tilde[-1,-1] = 1
-		# print("Z1tilde:\n", Z1tilde)
-
-		Z2tilde = self.Z2
+		Atilde = self.Atilde
+		Btilde = self.Btilde
+		Z1tilde  = self.Z1tilde
+		Z2tilde = self.Z2tilde
 		# print("Z2tilde:\n", Z2tilde)
 
 		a = np.sqrt(gamma)*Atilde
@@ -156,7 +158,6 @@ class WaterTankLQIZeroNoiseEnv(gym.Env):
 		K = gamma* (1/(gamma*Btilde.T@P@Btilde+Z2tilde))@Btilde.T@P@Atilde
 		self.K = K
 		return K
-
 
 	def get_lqr_action(self, observation):
 		return  - observation@self.K.T

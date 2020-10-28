@@ -13,7 +13,7 @@ class WaterTankLQRZeroNoiseEnv(gym.Env):
 					   x_max = np.array([10,10]),
 					   gamma=0.99,
 					   seed=None,
-					   overflow_cost = -100):
+					   overflow_cost = -40):
 		'''
 		Z1 is the because the the second tank is the only goal
 			for the first tank, the cost is whether overflow
@@ -94,9 +94,9 @@ class WaterTankLQRZeroNoiseEnv(gym.Env):
 		action_tilde = np.clip(action_tilde, self.action_space.low, self.action_space.high)
 		action = action_tilde + self.get_lqr_action(self.state)
 		if self.n==1:
-			action = np.clip(action_tilde, 0, self.action_space.high)
+			action = np.clip(action, 0, self.action_space.high)
 		else:
-			action = np.clip(action_tilde, np.zeros(self.n), self.action_space.high)
+			action = np.clip(action, np.zeros(self.n), self.action_space.high)
 		if self.n==1:
 			new_state = self.state@self.A.T + action*self.B.T.flatten() 
 		else:

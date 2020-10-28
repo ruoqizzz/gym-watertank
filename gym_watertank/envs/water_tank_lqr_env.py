@@ -14,7 +14,7 @@ class WaterTankLQREnv(gym.Env):
 					   gamma=0.99,
 					   noise_cov = np.eye(2)*0.01,
 					   seed=None,
-					   overflow_cost = -100):
+					   overflow_cost = -40):
 		'''
 		Z1 is the because the the second tank is the only goal
 			for the first tank, the cost is whether overflow
@@ -99,9 +99,9 @@ class WaterTankLQREnv(gym.Env):
 		noise = self.np_random.multivariate_normal(self.noise_mu, self.noise_cov)
 		action = action_tilde + self.get_lqr_action(self.state)
 		if self.n==1:
-			action = np.clip(action_tilde, 0, self.action_space.high)
+			action = np.clip(action, 0, self.action_space.high)
 		else:
-			action = np.clip(action_tilde, np.zeros(self.n), self.action_space.high)
+			action = np.clip(action, np.zeros(self.n), self.action_space.high)
 		if self.n==1:
 			new_state = self.state@self.A.T + action*self.B.T.flatten() + noise
 		else:

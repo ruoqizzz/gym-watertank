@@ -19,3 +19,14 @@ register(
     id='LQR-v0',
     entry_point='gym_watertank.envs:LQREnv',
 )
+
+register(
+    id='WaterTankLQI-v0',
+    entry_point='gym_watertank.envs:WaterTankLQIEnv',
+)
+
+register(
+    id='WaterTankLQIZeroNoise-v0',
+    entry_point='gym_watertank.envs:WaterTankLQIZeroNoiseEnv',
+)
+

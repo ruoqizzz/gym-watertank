@@ -63,7 +63,6 @@ class LQREnv(gym.Env):
 									high=self.high_state,
 									dtype=np.float32)
 		self.seed(seed)
-		self.reset()
 
 	def seed(self, seed=None):
 		self.np_random, seed = seeding.np_random(seed)

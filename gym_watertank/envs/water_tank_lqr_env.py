@@ -65,7 +65,6 @@ class WaterTankLQREnv(gym.Env):
 		self.overflow_cost = overflow_cost
 
 		self.seed(seed)
-		self.reset()
 		self.linear_KL(gamma)
 		
 

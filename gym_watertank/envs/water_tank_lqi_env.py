@@ -4,7 +4,7 @@ from gym.utils import seeding
 import numpy as np
 import scipy.linalg
 
-class WaterTankLQIEnv(object):
+class WaterTankLQIEnv(gym.Env):
 	"""docstring for WaterTankLQIEnv"""
 	metadata = {'render.modes': ['human']}
 	def __init__(self, A=np.array([[0.98, 0], 

@@ -60,7 +60,7 @@ class WaterTankLQREnv(gym.Env):
 									low=self.low_state,
 									high=self.high_state,
 									dtype=np.float32)
-		self._max_episode_steps = 400
+		self._max_episode_steps = 1000
 		self._episode_steps = 0
 		self.overflow_cost = overflow_cost
 
@@ -108,10 +108,7 @@ class WaterTankLQREnv(gym.Env):
 			new_state = self.state@self.A.T + action@self.B.T + noise
 		reward += self.add_overflow_cost(new_state)
 		self.state = np.clip(new_state,self.observation_space.low,self.observation_space.high)
-		if self._episode_steps < self._max_episode_steps:
-			done = False
-		else:
-			done = True
+		done = False
 		return self.state, reward, done, {}
 
 	def reset(self):

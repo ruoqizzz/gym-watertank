@@ -67,8 +67,9 @@ class WaterTankLQIZeroNoiseEnv(gym.Env):
 									dtype=np.float32)
 		# note: observation sapce is [x,z] dim: (m+1)by 1
 		self.low_state = np.zeros(self.m)
-		self.low_state[-1] = -np.inf
-		self.high_state = np.append(x_max, np.inf)
+		z_max = 2000.
+		self.low_state[-1] = -z_max
+		self.high_state = np.append(x_max, z_max)
 		self.observation_space = spaces.Box(
 									low=self.low_state,
 									high=self.high_state,

@@ -43,7 +43,7 @@ class WaterTankLQIEnv(gym.Env):
 		self.r = r
 		Z1tilde  = np.zeros((self.m, self.m))
 		Z1tilde[0:self.m-1,0:self.m-1] = Z1
-		Z1tilde[-1,-1] = 1e-3
+		Z1tilde[-1,-1] = 1e-4
 		# print("Z1tilde:\n", Z1tilde)
 		self.Z1tilde = Z1tilde
 

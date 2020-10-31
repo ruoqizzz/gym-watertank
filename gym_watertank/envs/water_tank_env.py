@@ -14,6 +14,7 @@ class WaterTankEnv(gym.Env):
 					   x_max = np.array([10,10]),
 					   gamma=0.99,
 					   noise_cov = np.eye(2)*0.01,
+					   seed = None,
 					   overflow_cost = -40):
 		'''
 		Z1 is the because the the second tank is the only goal

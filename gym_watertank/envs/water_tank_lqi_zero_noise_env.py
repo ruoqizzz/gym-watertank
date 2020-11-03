@@ -127,6 +127,37 @@ class WaterTankLQIZeroNoiseEnv(gym.Env):
 			done = True
 		return self._get_observe(), reward, done, {}
 
+	def step_eval(self, action_tilde):
+		self._episode_steps += 1
+		action_tilde = np.clip(action_tilde, self.action_space.low, self.action_space.high)
+		action = action_tilde + self.get_lqr_action(self._get_observe())
+		# clip action
+		if self.n==1:
+			action = np.clip(action, 0, self.action_space.high)
+		else:
+			action = np.clip(action, np.zeros(self.n), self.action_space.high)
+		# state transition
+		if self.n==1:
+			new_state = self.state@self.Atilde.T + action*self.Btilde.T.flatten() + np.array([0,0,1])*self.r
+		else:
+			new_state = self.state@self.Atilde.T + action@self.Btilde.T+ np.array([0,0,1])*self.r
+		
+		self.state = np.clip(new_state, self.observation_space.low, self.observation_space.high)
+		# ----------------------------------------------------
+		reward = self.add_overflow_cost(new_state[:self.m-1])
+		cost = (self.state[1] - self.r)**2
+		if self.n==1:
+			cost+= action_tilde*self.Z2tilde*action_tilde
+		else:
+			cost += action_tilde@self.Z2tilde@action_tilde.T
+		reward += -float(cost)
+		# ----------------------------------------------------
+		if self._episode_steps < self._max_episode_steps:
+			done = False
+		else:
+			done = True
+		return self._get_observe(), reward, done, {}
+
 	def _get_observe(self):
 		return self.state
 

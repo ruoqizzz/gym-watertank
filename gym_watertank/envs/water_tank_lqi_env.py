@@ -110,6 +110,7 @@ class WaterTankLQIEnv(gym.Env):
 
 	def step(self, action_tilde):
 		self._episode_steps += 1
+		reward = self.calcu_reward(action_tilde)
 		action_tilde = np.clip(action_tilde, self.action_space.low, self.action_space.high)
 		noise = self.np_random.multivariate_normal(self.noise_mu, self.noise_cov)
 		noise = np.append(noise, 0.)
@@ -127,8 +128,7 @@ class WaterTankLQIEnv(gym.Env):
 			new_state = self.state@self.Atilde.T + action@self.Btilde.T+ np.array([0,0,1])*self.r + noise
 		
 		self.state = np.clip(new_state, self.observation_space.low, self.observation_space.high)
-		reward = self.calcu_reward(action_tilde) + self.add_overflow_cost(new_state[:self.m-1])
-
+		reward += self.add_overflow_cost(new_state[:self.m-1])
 		if self._episode_steps < self._max_episode_steps:
 			done = False
 		else:
@@ -137,6 +137,13 @@ class WaterTankLQIEnv(gym.Env):
 
 	def step_eval(self, action_tilde):
 		self._episode_steps += 1
+		# ----------------------------------------------------
+		cost = (self.state[1] - self.r)**2
+		if self.n==1:
+			cost+= action_tilde*self.Z2tilde*action_tilde
+		else:
+			cost += action_tilde@self.Z2tilde@action_tilde.T
+		# ----------------------------------------------------
 		action_tilde = np.clip(action_tilde, self.action_space.low, self.action_space.high)
 		noise = self.np_random.multivariate_normal(self.noise_mu, self.noise_cov)
 		noise = np.append(noise, 0.)
@@ -154,15 +161,9 @@ class WaterTankLQIEnv(gym.Env):
 			new_state = self.state@self.Atilde.T + action@self.Btilde.T+ np.array([0,0,1])*self.r + noise
 		
 		self.state = np.clip(new_state, self.observation_space.low, self.observation_space.high)
-		# ----------------------------------------------------
-		reward = self.add_overflow_cost(new_state[:self.m-1])
-		cost = (self.state[1]-noise[1] - self.r)**2
-		if self.n==1:
-			cost+= action_tilde*self.Z2tilde*action_tilde
-		else:
-			cost += action_tilde@self.Z2tilde@action_tilde.T
-		reward += -float(cost)
-		# ----------------------------------------------------
+		# -----------------------------------------------------------------
+		reward = self.add_overflow_cost(new_state[:self.m-1]) - float(cost)
+		# -----------------------------------------------------------------
 		if self._episode_steps < self._max_episode_steps:
 			done = False
 		else:

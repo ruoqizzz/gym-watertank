@@ -34,6 +34,16 @@ register(
     entry_point='gym_watertank.envs:LQREnv',
 )
 
+# Integral
+register(
+    id='WaterTankIntegral-v0',
+    entry_point='gym_watertank.envs:WaterTankIntegralEnv',
+)
+register(
+    id='WaterTankIntegral-v1',
+    entry_point='gym_watertank.envs:WaterTankIntegralEnv1',
+)
+
 # LQI
 register(
     id='WaterTankLQI-v0',

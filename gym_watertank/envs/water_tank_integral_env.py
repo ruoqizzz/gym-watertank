@@ -5,15 +5,13 @@ import numpy as np
 import scipy.linalg
 
 class WaterTankIntegralEnv(gym.Env):
-	"""docstring for WaterTankIntegralEnv"""
+	"""docstring for WaterTankLQIEnv"""
 	metadata = {'render.modes': ['human']}
 	def __init__(self, A=np.array([[0.98, 0], 
 									[0.02, 0.98]]),
 					   B=np.array([[0.1],[0]]),
 					   r = 9.,
-					   # ------------------------------------
-					   Z1 = np.array([[0,0],[0,1]]),
-					   # ------------------------------------
+					   Z1 = np.array([[0,0],[0,0]]),
 					   Z2 = 0.1,
 					   x_max = np.array([10,10]),
 					   gamma=0.99,
@@ -30,11 +28,6 @@ class WaterTankIntegralEnv(gym.Env):
 		else:
 			self.n == 1
 
-		self.Z1 = Z1
-		self.Z2 = Z2
-		self.A = A
-		self.B = B
-
 		Atilde = np.zeros((self.m, self.m))
 		Atilde[0:self.m-1,0:self.m-1] = A
 		Atilde[-1][-1] = 1
@@ -50,9 +43,7 @@ class WaterTankIntegralEnv(gym.Env):
 		self.r = r
 		Z1tilde  = np.zeros((self.m, self.m))
 		Z1tilde[0:self.m-1,0:self.m-1] = Z1
-		# ------------------------------------
-		Z1tilde[-1,-1] = 0
-		# ------------------------------------
+		Z1tilde[-1,-1] = 1e-4
 		# print("Z1tilde:\n", Z1tilde)
 		self.Z1tilde = Z1tilde
 
@@ -117,14 +108,14 @@ class WaterTankIntegralEnv(gym.Env):
 		return additional_cost
 
 
-	def step(self, action_tilde):
+	# note: action here! d
+	def step(self, action):
+		# ======================================================================
 		self._episode_steps += 1
-		reward = self.calcu_reward(action_tilde)
-		action_tilde = np.clip(action_tilde, self.action_space.low, self.action_space.high)
+		reward = self.calcu_reward(action)
 		noise = self.np_random.multivariate_normal(self.noise_mu, self.noise_cov)
 		noise = np.append(noise, 0.)
-		# noise = 0.
-		action = action_tilde + self.get_lqr_action(self._get_observe())
+		# ======================================================================
 		# clip action
 		if self.n==1:
 			action = np.clip(action, 0, self.action_space.high)
@@ -144,16 +135,13 @@ class WaterTankIntegralEnv(gym.Env):
 			done = True
 		return self._get_observe(), reward, done, {}
 
-	def step_eval(self, action_tilde):
+	def step_eval(self, action):
 		self._episode_steps += 1
 		# ----------------------------------------------------
 		cost = (self.state[1] - self.r)**2
 		# ----------------------------------------------------
-		action_tilde = np.clip(action_tilde, self.action_space.low, self.action_space.high)
 		noise = self.np_random.multivariate_normal(self.noise_mu, self.noise_cov)
 		noise = np.append(noise, 0.)
-		# noise = 0.
-		action = action_tilde + self.get_lqr_action(self._get_observe())
 		# clip action
 		if self.n==1:
 			action = np.clip(action, 0, self.action_space.high)
@@ -208,21 +196,17 @@ class WaterTankIntegralEnv(gym.Env):
 		return K
 
 	def get_lqr_action(self, observation):
-		# print(observation)
 		return  - observation@self.K.T
 
-
-# no action punishment
+#  no action punishment
 class WaterTankIntegralEnv1(gym.Env):
-	"""docstring for WaterTankIntegralEnv"""
+	"""docstring for WaterTankLQIEnv"""
 	metadata = {'render.modes': ['human']}
 	def __init__(self, A=np.array([[0.98, 0], 
 									[0.02, 0.98]]),
 					   B=np.array([[0.1],[0]]),
 					   r = 9.,
-					   # ------------------------------------
-					   Z1 = np.array([[0,0],[0,1]]),
-					   # ------------------------------------
+					   Z1 = np.array([[0,0],[0,0]]),
 					   Z2 = 0.1,
 					   x_max = np.array([10,10]),
 					   gamma=0.99,
@@ -239,11 +223,6 @@ class WaterTankIntegralEnv1(gym.Env):
 		else:
 			self.n == 1
 
-		self.Z1 = Z1
-		self.Z2 = Z2
-		self.A = A
-		self.B = B
-
 		Atilde = np.zeros((self.m, self.m))
 		Atilde[0:self.m-1,0:self.m-1] = A
 		Atilde[-1][-1] = 1
@@ -259,9 +238,7 @@ class WaterTankIntegralEnv1(gym.Env):
 		self.r = r
 		Z1tilde  = np.zeros((self.m, self.m))
 		Z1tilde[0:self.m-1,0:self.m-1] = Z1
-		# ------------------------------------
-		Z1tilde[-1,-1] = 0
-		# ------------------------------------
+		Z1tilde[-1,-1] = 1e-4
 		# print("Z1tilde:\n", Z1tilde)
 		self.Z1tilde = Z1tilde
 
@@ -309,8 +286,8 @@ class WaterTankIntegralEnv1(gym.Env):
 
 
 	def calcu_reward(self,u):
-		cost = self.state@self.Z1tilde@self.state
 		# no action punishment
+		cost = self.state@self.Z1tilde@self.state
 		return -float(cost)
 
 
@@ -322,15 +299,12 @@ class WaterTankIntegralEnv1(gym.Env):
 			additional_cost +=self.overflow_cost 
 		return additional_cost
 
-
-	def step(self, action_tilde):
+	# action here!
+	def step(self, action):
 		self._episode_steps += 1
-		reward = self.calcu_reward(action_tilde)
-		action_tilde = np.clip(action_tilde, self.action_space.low, self.action_space.high)
+		reward = self.calcu_reward(action)
 		noise = self.np_random.multivariate_normal(self.noise_mu, self.noise_cov)
 		noise = np.append(noise, 0.)
-		# noise = 0.
-		action = action_tilde + self.get_lqr_action(self._get_observe())
 		# clip action
 		if self.n==1:
 			action = np.clip(action, 0, self.action_space.high)
@@ -350,16 +324,13 @@ class WaterTankIntegralEnv1(gym.Env):
 			done = True
 		return self._get_observe(), reward, done, {}
 
-	def step_eval(self, action_tilde):
+	def step_eval(self, action):
 		self._episode_steps += 1
 		# ----------------------------------------------------
 		cost = (self.state[1] - self.r)**2
 		# ----------------------------------------------------
-		action_tilde = np.clip(action_tilde, self.action_space.low, self.action_space.high)
 		noise = self.np_random.multivariate_normal(self.noise_mu, self.noise_cov)
 		noise = np.append(noise, 0.)
-		# noise = 0.
-		action = action_tilde + self.get_lqr_action(self._get_observe())
 		# clip action
 		if self.n==1:
 			action = np.clip(action, 0, self.action_space.high)

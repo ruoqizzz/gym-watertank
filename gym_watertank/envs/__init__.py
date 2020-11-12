@@ -6,6 +6,7 @@ from gym_watertank.envs.water_tank_lqr_zero_noise_env import WaterTankLQRZeroNoi
 from gym_watertank.envs.water_tank_lqi_env import WaterTankLQIEnv
 from gym_watertank.envs.water_tank_lqi_zero_noise_env import WaterTankLQIZeroNoiseEnv
 from gym_watertank.envs.water_tank_integral_env import WaterTankIntegralEnv
+from gym_watertank.envs.water_tank_integral_zero_noise_env import WaterTankIntegralZeroNoiseEnv
 
 from gym_watertank.envs.water_tank_env import WaterTankEnv1
 from gym_watertank.envs.water_tank_lqr_env import WaterTankLQREnv1
@@ -13,3 +14,7 @@ from gym_watertank.envs.water_tank_lqr_zero_noise_env import WaterTankLQRZeroNoi
 from gym_watertank.envs.water_tank_lqi_env import WaterTankLQIEnv1
 from gym_watertank.envs.water_tank_lqi_zero_noise_env import WaterTankLQIZeroNoiseEnv1
 from gym_watertank.envs.water_tank_integral_env import WaterTankIntegralEnv1
+from gym_watertank.envs.water_tank_integral_zero_noise_env import WaterTankIntegralZeroNoiseEnv1
+
+from gym_watertank.envs.water_tank_integral_env import WaterTankIntegralEnv2
+from gym_watertank.envs.water_tank_integral_zero_noise_env import WaterTankIntegralZeroNoiseEnv2

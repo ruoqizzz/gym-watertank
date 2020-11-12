@@ -4,7 +4,7 @@ from gym.utils import seeding
 import numpy as np
 import scipy.linalg
 
-class WaterTankLQIZeroNoiseEnv(gym.Env):
+class WaterTankIntegralZeroNoiseEnv(gym.Env):
 	"""docstring for WaterTankLQIEnv"""
 	metadata = {'render.modes': ['human']}
 	def __init__(self, A=np.array([[0.98, 0], 
@@ -17,7 +17,8 @@ class WaterTankLQIZeroNoiseEnv(gym.Env):
 					   gamma=0.99,
 					   seed=None,
 					   overflow_cost = -100):
-		super(WaterTankLQIZeroNoiseEnv, self).__init__()
+		super(WaterTankIntegralZeroNoiseEnv, self).__init__()
+		
 		self.m = A.shape[0] + 1
 		assert B.shape[0] == A.shape[1]
 		self.n = B.shape[1]
@@ -104,11 +105,12 @@ class WaterTankLQIZeroNoiseEnv(gym.Env):
 		return additional_cost
 
 
-	def step(self, action_tilde):
+	# note: action here! d
+	def step(self, action):
+		# ======================================================================
 		self._episode_steps += 1
-		reward = self.calcu_reward(action_tilde)
-		action_tilde = np.clip(action_tilde, self.action_space.low, self.action_space.high)
-		action = action_tilde + self.get_lqr_action(self._get_observe())
+		reward = self.calcu_reward(action)
+		# ======================================================================
 		# clip action
 		if self.n==1:
 			action = np.clip(action, 0, self.action_space.high)
@@ -118,7 +120,7 @@ class WaterTankLQIZeroNoiseEnv(gym.Env):
 		if self.n==1:
 			new_state = self.state@self.Atilde.T + action*self.Btilde.T.flatten() + np.array([0,0,1])*self.r
 		else:
-			new_state = self.state@self.Atilde.T + action@self.Btilde.T+ np.array([0,0,1])*self.r
+			new_state = self.state@self.Atilde.T + action@self.Btilde.T+ np.array([0,0,1])*self.r 
 		
 		self.state = np.clip(new_state, self.observation_space.low, self.observation_space.high)
 		reward += self.add_overflow_cost(new_state[:self.m-1])
@@ -128,13 +130,11 @@ class WaterTankLQIZeroNoiseEnv(gym.Env):
 			done = True
 		return self._get_observe(), reward, done, {}
 
-	def step_eval(self, action_tilde):
+	def step_eval(self, action):
 		self._episode_steps += 1
 		# ----------------------------------------------------
 		cost = (self.state[1] - self.r)**2
 		# ----------------------------------------------------
-		action_tilde = np.clip(action_tilde, self.action_space.low, self.action_space.high)
-		action = action_tilde + self.get_lqr_action(self._get_observe())
 		# clip action
 		if self.n==1:
 			action = np.clip(action, 0, self.action_space.high)
@@ -144,11 +144,11 @@ class WaterTankLQIZeroNoiseEnv(gym.Env):
 		if self.n==1:
 			new_state = self.state@self.Atilde.T + action*self.Btilde.T.flatten() + np.array([0,0,1])*self.r
 		else:
-			new_state = self.state@self.Atilde.T + action@self.Btilde.T+ np.array([0,0,1])*self.r
+			new_state = self.state@self.Atilde.T + action@self.Btilde.T+ np.array([0,0,1])*self.r 
 		
 		self.state = np.clip(new_state, self.observation_space.low, self.observation_space.high)
 		# -----------------------------------------------------------------
-		reward = self.add_overflow_cost(new_state[:self.m-1]) -float(cost)
+		reward = self.add_overflow_cost(new_state[:self.m-1]) - float(cost)
 		# -----------------------------------------------------------------
 		if self._episode_steps < self._max_episode_steps:
 			done = False
@@ -161,9 +161,8 @@ class WaterTankLQIZeroNoiseEnv(gym.Env):
 
 	def reset(self):
 		self._episode_steps = 0
-		# random_state = np.append(self.np_random.normal(0,0.1, size=self.m-1), 0.)
-		# self.state = np.clip(random_state, self.observation_space.low, self.observation_space.high)
-		self.state = np.array([0.]*self.m)
+		random_state = np.append(self.np_random.normal(0,0.1, size=self.m-1), 0.)
+		self.state = np.clip(random_state, self.observation_space.low, self.observation_space.high)
 		return self._get_observe()
 
 	def render(self, mode='human'):
@@ -192,9 +191,8 @@ class WaterTankLQIZeroNoiseEnv(gym.Env):
 	def get_lqr_action(self, observation):
 		return  - observation@self.K.T
 
-
-# no action punishment
-class WaterTankLQIZeroNoiseEnv1(WaterTankLQIZeroNoiseEnv):
+#  no action punishment
+class WaterTankIntegralZeroNoiseEnv1(WaterTankIntegralZeroNoiseEnv):
 	"""docstring for WaterTankLQIEnv"""
 	metadata = {'render.modes': ['human']}
 	def __init__(self, A=np.array([[0.98, 0], 
@@ -205,11 +203,38 @@ class WaterTankLQIZeroNoiseEnv1(WaterTankLQIZeroNoiseEnv):
 					   Z2 = 0.1,
 					   x_max = np.array([10,10]),
 					   gamma=0.99,
+					   noise_cov = np.eye(2)*0.01,
 					   seed=None,
 					   overflow_cost = -100):
-		super(WaterTankLQIZeroNoiseEnv1, self).__init__()
-		
+		super(WaterTankIntegralZeroNoiseEnv1, self).__init__()
+
+
 	def calcu_reward(self,u):
-		# no action_Tilde punishment
+		# no action punishment
 		cost = self.state@self.Z1tilde@self.state
+		return -float(cost)
+
+
+class WaterTankIntegralZeroNoiseEnv2(WaterTankIntegralZeroNoiseEnv):
+	"""docstring for WaterTankLQIEnv"""
+	metadata = {'render.modes': ['human']}
+	def __init__(self, A=np.array([[0.98, 0], 
+									[0.02, 0.98]]),
+					   B=np.array([[0.1],[0]]),
+					   r = 9.,
+					   Z1 = np.array([[0,0],[0,0]]),
+					   Z2 = 0.1,
+					   x_max = np.array([10,10]),
+					   gamma=0.99,
+					   noise_cov = np.eye(2)*0.01,
+					   seed=None,
+					   overflow_cost = -100):
+		super(WaterTankIntegralZeroNoiseEnv2, self).__init__()
+
+	def calcu_reward(self,u):
+		cost = self.state@self.Z1tilde@self.state + (self.state[1] - self.r)**2
+		if self.n==1:
+			cost+= u*self.Z2tilde*u
+		else:
+			cost += u@self.Z2tilde@u.T
 		return -float(cost)

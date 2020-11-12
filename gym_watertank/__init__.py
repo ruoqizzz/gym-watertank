@@ -43,6 +43,22 @@ register(
     id='WaterTankIntegral-v1',
     entry_point='gym_watertank.envs:WaterTankIntegralEnv1',
 )
+register(
+    id='WaterTankIntegral-v2',
+    entry_point='gym_watertank.envs:WaterTankIntegralEnv2',
+)
+register(
+    id='WaterTankIntegralZeroNoise-v0',
+    entry_point='gym_watertank.envs:WaterTankIntegralZeroNoiseEnv',
+)
+register(
+    id='WaterTankIntegralZeroNoise-v1',
+    entry_point='gym_watertank.envs:WaterTankIntegralZeroNoiseEnv1',
+)
+register(
+    id='WaterTankIntegralZeroNoise-v2',
+    entry_point='gym_watertank.envs:WaterTankIntegralZeroNoiseEnv2',
+)
 
 # LQI
 register(

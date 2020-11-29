@@ -33,6 +33,10 @@ register(
     id='LQR-v0',
     entry_point='gym_watertank.envs:LQREnv',
 )
+register(
+    id='LQRPrior-v0',
+    entry_point='gym_watertank.envs:LQRPriorEnv',
+)
 
 # Integral
 register(
